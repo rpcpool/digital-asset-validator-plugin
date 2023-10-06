@@ -1,8 +1,8 @@
-use crate::error::PlerkleSerializationError;
-use crate::solana_geyser_plugin_interface_shims::{
-    ReplicaAccountInfoV2, ReplicaBlockInfoV2, ReplicaTransactionInfoV2, SlotStatus,
-};
 use crate::{
+    error::PlerkleSerializationError,
+    solana_geyser_plugin_interface_shims::{
+        ReplicaAccountInfoV2, ReplicaBlockInfoV2, ReplicaTransactionInfoV2, SlotStatus,
+    },
     AccountInfo, AccountInfoArgs, BlockInfo, BlockInfoArgs, CompiledInnerInstruction,
     CompiledInnerInstructionArgs, CompiledInnerInstructions, CompiledInnerInstructionsArgs,
     CompiledInstruction, CompiledInstructionArgs, Pubkey as FBPubkey, Pubkey, SlotStatusInfo,
@@ -11,11 +11,13 @@ use crate::{
 };
 use chrono::Utc;
 use flatbuffers::{FlatBufferBuilder, WIPOffset};
-use solana_sdk::message::{SanitizedMessage, VersionedMessage};
-use solana_sdk::transaction::VersionedTransaction;
-use solana_transaction_status::option_serializer::OptionSerializer;
+use solana_sdk::{
+    message::{SanitizedMessage, VersionedMessage},
+    transaction::VersionedTransaction,
+};
 use solana_transaction_status::{
-    EncodedConfirmedTransactionWithStatusMeta, UiInstruction, UiTransactionStatusMeta,
+    option_serializer::OptionSerializer, EncodedConfirmedTransactionWithStatusMeta, UiInstruction,
+    UiTransactionStatusMeta,
 };
 
 pub fn serialize_account<'a>(
@@ -136,11 +138,11 @@ pub fn serialize_transaction<'a>(
         for inner_instructions in inner_instructions_vec.iter() {
             let index = inner_instructions.index;
             let mut instructions_fb_vec = Vec::with_capacity(inner_instructions.instructions.len());
-            for instruction in inner_instructions.instructions.iter() {
-                let compiled_instruction = &instruction.instruction;
-                let program_id_index = compiled_instruction.program_id_index;
-                let accounts = Some(builder.create_vector(&compiled_instruction.accounts));
-                let data = Some(builder.create_vector(&compiled_instruction.data));
+            for compiled_instruction in inner_instructions.instructions.iter() {
+                let program_id_index = compiled_instruction.instruction.program_id_index;
+                let accounts =
+                    Some(builder.create_vector(&compiled_instruction.instruction.accounts));
+                let data = Some(builder.create_vector(&compiled_instruction.instruction.data));
                 let compiled = CompiledInstruction::create(
                     &mut builder,
                     &CompiledInstructionArgs {
@@ -262,18 +264,16 @@ pub fn seralize_encoded_transaction_with_status(
     mut builder: FlatBufferBuilder,
     tx: EncodedConfirmedTransactionWithStatusMeta,
 ) -> Result<FlatBufferBuilder, PlerkleSerializationError> {
-    let meta: UiTransactionStatusMeta = tx.transaction.meta.ok_or_else(|| {
-        PlerkleSerializationError::SerializationError(
-            "Missing meta data for transaction".to_string(),
-        )
-    })?;
+    let meta: UiTransactionStatusMeta =
+        tx.transaction
+            .meta
+            .ok_or(PlerkleSerializationError::SerializationError(
+                "Missing meta data for transaction".to_string(),
+            ))?;
     // Get `UiTransaction` out of `EncodedTransactionWithStatusMeta`.
-    let ui_transaction: VersionedTransaction =
-        tx.transaction.transaction.decode().ok_or_else(|| {
-            PlerkleSerializationError::SerializationError(
-                "Transaction cannot be decoded".to_string(),
-            )
-        })?;
+    let ui_transaction: VersionedTransaction = tx.transaction.transaction.decode().ok_or(
+        PlerkleSerializationError::SerializationError("Transaction cannot be decoded".to_string()),
+    )?;
     let msg = ui_transaction.message;
     let atl_keys = msg.address_table_lookups();
     let account_keys = msg.static_account_keys();

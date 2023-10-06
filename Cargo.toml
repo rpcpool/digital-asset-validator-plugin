@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "plerkle_messenger", # 1.5.3
-    "plerkle", # 1.5.3+solana.1.16.15
-    "plerkle_serialization", # 1.5.3+solana.1.16.15
+    "plerkle", # 1.6.0+solana.1.16.15
+    "plerkle_messenger", # 1.6.0
+    "plerkle_serialization", # 1.6.0+solana.1.16.15
 ]
 
 [profile.release]
