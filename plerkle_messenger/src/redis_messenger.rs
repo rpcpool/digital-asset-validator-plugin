@@ -34,6 +34,7 @@ pub const REDIS_MAX_BYTES_COMMAND: usize = 536870912;
 pub const PIPELINE_SIZE_BYTES: usize = REDIS_MAX_BYTES_COMMAND / 100;
 pub const PIPELINE_MAX_TIME: u64 = 10;
 
+#[allow(dead_code)]
 pub struct RedisMessenger {
     connection: ConnectionManager,
     streams: HashMap<&'static str, RedisMessengerStream>,
@@ -61,7 +62,7 @@ impl RedisMessenger {
         &mut self,
         stream_key: &'static str,
     ) -> Result<Vec<RecvData>, MessengerError> {
-        let mut id = "0-0".to_owned();
+        let id = "0-0".to_owned();
         let mut xauto = cmd("XAUTOCLAIM");
         xauto
             .arg(stream_key)
@@ -300,7 +301,7 @@ impl Messenger for RedisMessenger {
         // Put serialized data into Redis.
         if stream.local_buffer_total < self.pipeline_size
             && stream.local_buffer_last_flush.elapsed()
-                <= Duration::from_millis(self.pipeline_max_time as u64)
+                <= Duration::from_millis(self.pipeline_max_time)
         {
             debug!(
                 "Redis local buffer bytes {} and message pipeline size {} elapsed time {}ms",

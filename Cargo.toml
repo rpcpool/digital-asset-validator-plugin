@@ -1,6 +1,11 @@
 [workspace]
 members = [
-    "plerkle_messenger",
-    "plerkle",
-    "plerkle_serialization"
+    "plerkle_messenger", # 1.5.3
+    "plerkle", # 1.5.3+solana.1.16.15
+    "plerkle_serialization", # 1.5.3+solana.1.16.15
 ]
+
+[profile.release]
+debug = true
+lto = true
+codegen-units = 1
