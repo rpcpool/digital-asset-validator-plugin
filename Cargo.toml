@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "plerkle", # 1.6.0+solana.1.16.17
-    "plerkle_messenger", # 1.6.0
-    "plerkle_serialization", # 1.6.0+solana.1.16.17
+    "plerkle", # 1.6.0+solana.1.16.18
+    "plerkle_messenger", # 1.6.8
+    "plerkle_serialization", # 1.6.0+solana.1.16.18
 ]
 
 [profile.release]
@@ -11,7 +11,7 @@ lto = true
 codegen-units = 1
 
 [patch.crates-io]
-solana-geyser-plugin-interface = { git = "https://github.com/rpcpool/solana-public.git", tag = "v1.16.17-geyser-block-v3" }
-solana-program = { git = "https://github.com/rpcpool/solana-public.git", tag = "v1.16.17-geyser-block-v3" }
-solana-sdk = { git = "https://github.com/rpcpool/solana-public.git", tag = "v1.16.17-geyser-block-v3" }
-solana-transaction-status = { git = "https://github.com/rpcpool/solana-public.git", tag = "v1.16.17-geyser-block-v3" }
+solana-geyser-plugin-interface = { git = "https://github.com/rpcpool/solana-public.git", tag = "v1.16.18-geyser-block-v3" }
+solana-program = { git = "https://github.com/rpcpool/solana-public.git", tag = "v1.16.18-geyser-block-v3" }
+solana-sdk = { git = "https://github.com/rpcpool/solana-public.git", tag = "v1.16.18-geyser-block-v3" }
+solana-transaction-status = { git = "https://github.com/rpcpool/solana-public.git", tag = "v1.16.18-geyser-block-v3" }
