@@ -247,6 +247,36 @@ impl Messenger for RedisMessenger {
         }
     }
 
+    async fn add_streams(&mut self, streams: &[(&'static str, usize)]) -> Result<(), MessengerError> {
+        for (stream_key, max_buffer_size) in streams {
+            // Add to streams hashmap.
+            let _result = self.streams.insert(
+                stream_key,
+                RedisMessengerStream {
+                    max_len: Some(StreamMaxlen::Approx(*max_buffer_size)),
+                    local_buffer: LinkedList::new(),
+                    local_buffer_total: 0,
+                    local_buffer_last_flush: Instant::now(),
+                },
+            );
+
+            // Add stream to Redis.
+            let result: RedisResult<()> = self
+                .connection
+                .xgroup_create_mkstream(stream_key, self.consumer_group_name.as_str(), "$")
+                .await;
+
+            if let Err(error) = result {
+                if !(error.kind() == redis::ErrorKind::ExtensionError && error.code() == Some("BUSYGROUP")) {
+                    return Err(MessengerError::ConfigurationError {
+                        msg: format!("{:?}", error),
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
+
     async fn add_stream(&mut self, stream_key: &'static str) -> Result<(), MessengerError> {
         // Add to streams hashmap.
         let _result = self.streams.insert(
