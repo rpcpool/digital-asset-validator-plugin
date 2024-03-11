@@ -167,11 +167,11 @@ impl Messenger for RedisMessenger {
                 msg: format!("Connection String Missing: {}", REDIS_CON_STR),
             })?;
         // Setup Redis client.
-        let client = redis::Client::open(uri).unwrap();
+        let client = redis::Client::open(uri.clone()).unwrap();
 
         // Get connection.
         let connection = client.get_tokio_connection_manager().await.map_err(|e| {
-            error!("{}", e.to_string());
+            error!("failed to connect to {uri}, error: {e:?}");
             MessengerError::ConnectionError { msg: e.to_string() }
         })?;
 
