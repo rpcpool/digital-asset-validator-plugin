@@ -1,17 +1,32 @@
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
-  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
   push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build20:
-    # current github actions ubuntu latest is 20.04
-    runs-on: ubuntu-20.04
+  release:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+    runs-on: ["${{ matrix.os }}"]
+
     steps:
     - name: checkout repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: true
         lfs: true
@@ -27,23 +42,26 @@ jobs:
         echo "RELEASE=$release" | tee -a "$GITHUB_ENV"
       # echo "TAG=$tag" | tee -a "$GITHUB_ENV"
 
-    - uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: ${{ env.RUST_VERSION }}
-        override: true
-        profile: ${{ env.RUST_PROFILE }}
-        components: ${{ env.RUST_COMPONENTS }}
 
     - name: Build plerkle plugin
       run: cargo build --verbose --release
 
     - name: Package libplerkle
+      if: matrix.os == 'ubuntu-20.04'
       working-directory: target/release
       run: tar -cvjf plerkle-x86_64-unknown-linux-gnu.tar.bz2 libplerkle.so
 
+    - name: Package libplerkle
+      if: matrix.os == 'ubuntu-22.04'
+      working-directory: target/release
+      run: tar -cvjf plerkle22-x86_64-unknown-linux-gnu.tar.bz2 libplerkle.so
+
     - name: Publish to release
       if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         name: "${{ env.RELEASE }}"
         # tag_name: "${{ env.TAG }}"
@@ -53,52 +71,4 @@ jobs:
           The solana-sdk version used to compile this plugin is ${{ env.SOLANA_VERSION }}
           The rust version used is ${{ env.RUST_VERSION }}
         files: |
-          target/release/plerkle-x86_64-unknown-linux-gnu.tar.bz2
-
-  build22:
-    runs-on: ubuntu-22.04
-    steps:
-    - name: checkout repo
-      uses: actions/checkout@v3
-      with:
-        submodules: true
-        lfs: true
-
-    - name: set env vars
-      run: |
-        source ci/env.sh
-        echo "RUST_VERSION=$rust_version" | tee -a "$GITHUB_ENV"
-        echo "RUST_PROFILE=$rust_profile" | tee -a "$GITHUB_ENV"
-        echo "RUST_COMPONENTS=$rust_components" | tee -a "$GITHUB_ENV"
-        echo "SOLANA_VERSION=$solana_version" | tee -a "$GITHUB_ENV"
-        echo "PLUGIN_VERSION=$plugin_version" | tee -a "$GITHUB_ENV"
-        echo "TAG=$tag" | tee -a "$GITHUB_ENV"
-        echo "RELEASE=$release" | tee -a "$GITHUB_ENV"
-
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: ${{ env.RUST_VERSION }}
-        override: true
-        profile: ${{ env.RUST_PROFILE }}
-        components: ${{ env.RUST_COMPONENTS }}
-
-    - name: Build plerkle plugin
-      run: cargo build --verbose --release
-
-    - name: Package libplerkle
-      working-directory: target/release
-      run: tar -cvjf plerkle22-x86_64-unknown-linux-gnu.tar.bz2 libplerkle.so
-
-    - name: Publish to release
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
-      with:
-        name: ${{ env.RELEASE }}
-        # tag_name: ${{ env.TAG }}
-        token: ${{ github.token }}
-        body: |
-          The plugin version is ${{ env.PLUGIN_VERSION }}
-          The solana-sdk version used to compile this plugin is ${{ env.SOLANA_VERSION }}
-          The rust version used is ${{ env.RUST_VERSION }}
-        files: |
-          target/release/plerkle22-x86_64-unknown-linux-gnu.tar.bz2
+          target/release/plerkle*-x86_64-unknown-linux-gnu.tar.bz2

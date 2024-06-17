@@ -1,16 +1,25 @@
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
-  workflow_dispatch:
+  pull_request:
   push:
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build20:
-    runs-on: ubuntu-20.04
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+    runs-on: ["${{ matrix.os }}"]
+
     steps:
     - name: checkout repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: true
         lfs: true
@@ -22,57 +31,13 @@ jobs:
         echo "RUST_PROFILE=$rust_profile" | tee -a "$GITHUB_ENV"
         echo "RUST_COMPONENTS=$rust_components" | tee -a "$GITHUB_ENV"
 
-    - uses: actions-rs/toolchain@v1
+    - uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: ${{ env.RUST_VERSION }}
-        override: true
-        profile: ${{ env.RUST_PROFILE }}
-        components: ${{ env.RUST_COMPONENTS }}
+        components: clippy
 
-    - name: cargo clippy
-      uses: actions-rs/cargo@v1
-      with:
-        command: clippy
-        args: --workspace --all-targets #-- --deny=warnings
-
-    - name: cargo test
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
-        args: -- --nocapture
-
-    - name: Build plerkle plugin
-      run: cargo build --verbose --release
-
-  build22:
-    # current github actions ubuntu latest is 22.04
-    runs-on: Ubuntu-22.04
-    steps:
-    - name: checkout repo
-      uses: actions/checkout@v3
-      with:
-        submodules: true
-        lfs: true
-
-    - name: set env vars
-      run: |
-        source ci/env.sh
-        echo "RUST_VERSION=$rust_version" | tee -a "$GITHUB_ENV"
-        echo "RUST_PROFILE=$rust_profile" | tee -a "$GITHUB_ENV"
-        echo "RUST_COMPONENTS=$rust_components" | tee -a "$GITHUB_ENV"
-
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: ${{ env.RUST_VERSION }}
-        override: true
-        profile: ${{ env.RUST_PROFILE }}
-        components: ${{ env.RUST_COMPONENTS }}
-
-    - name: cargo clippy
-      uses: actions-rs/cargo@v1
-      with:
-        command: clippy
-        args: --workspace --all-targets #-- --deny=warnings
+    - name: Run clippy
+      run: cargo clippy --all-targets --tests -- -Dwarnings
 
     - name: cargo test
       uses: actions-rs/cargo@v1

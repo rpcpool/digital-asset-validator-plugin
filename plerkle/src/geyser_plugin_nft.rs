@@ -321,7 +321,7 @@ impl GeyserPlugin for Plerkle<'static> {
         "Plerkle"
     }
 
-    fn on_load(&mut self, config_file: &str) -> Result<()> {
+    fn on_load(&mut self, config_file: &str, _is_startup: bool) -> Result<()> {
         solana_logger::setup_with_default("info");
 
         // Read in config file.
