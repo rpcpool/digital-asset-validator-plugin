@@ -1,9 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
-    "plerkle", # 1.6.0+solana.2.0.7
+    "plerkle", # 1.6.0+solana.2.0.8
     "plerkle_messenger", # 1.6.6
-    "plerkle_serialization", # 1.6.0+solana.2.0.7
+    "plerkle_serialization", # 1.6.0+solana.2.0.8
 ]
 
 [profile.release]
