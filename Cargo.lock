@@ -2085,7 +2085,7 @@ checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 
 [[package]]
 name = "plerkle"
-version = "1.6.0+solana.2.0.10"
+version = "1.6.0"
 dependencies = [
  "agave-geyser-plugin-interface",
  "async-trait",
@@ -2136,7 +2136,7 @@ dependencies = [
 
 [[package]]
 name = "plerkle_serialization"
-version = "1.6.0+solana.2.0.10"
+version = "1.6.0"
 dependencies = [
  "bs58 0.4.0",
  "chrono",
